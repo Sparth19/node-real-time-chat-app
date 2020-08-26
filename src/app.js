@@ -1,26 +1,29 @@
 const express = require('express')
-const app = express()
-const hbs = require('hbs')
+const socketio = require('socket.io')
+const http = require('http')
 const path = require('path')
-
-const publicPath = path.join(__dirname, '../public')
-const viewPath = path.join(__dirname, '../templates/views')
-    //const partialPath = path.join(__dirname, '../templates/partials')
-
-app.use(express.static(publicPath))
-app.set('views', viewPath)
-app.set('view engine', 'hbs')
-    //hbs.registerPartial(partialPath)
 
 const port = process.env.PORT
 
-app.get('', (req, res) => {
-    res.render('index', {
-        title: 'Chat App',
-        body: 'Welcome !'
+const publicPath = path.join(__dirname, '../public')
+
+const app = express()
+const server = http.createServer(app)
+const io = socketio(server)
+
+app.use(express.static(publicPath))
+
+let count = 0
+io.on('connection', (socket) => {
+    console.log('New Websocket connection')
+    socket.emit('message', "Welcome !") //emits to single connection
+
+    socket.on('sendmsg', (msg) => {
+        io.emit('message', msg) //emits to all connections
     })
 
 })
-app.listen(3000, () => {
-    console.log('Server is on | ' + 3000)
+
+server.listen(port, () => {
+    console.log('Server is on | ' + port)
 })
